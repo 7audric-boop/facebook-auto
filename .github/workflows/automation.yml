@@ -1,0 +1,43 @@
+name: Verification Zefame
+on:
+  schedule:
+    - cron: "0 8,20 * * *"
+      timezone: Europe/Paris
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - main.py
+      - .github/workflows/automation.yml
+permissions:
+  contents: read
+concurrency:
+  group: verification-zefame
+  cancel-in-progress: false
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer Playwright et Chromium
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Verifier le programme Python
+        run: python -m py_compile main.py
+      - name: Verifier Zefame sans soumission
+        run: python main.py
+      - name: Conserver le rapport et la capture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultat-zefame
+          path: resultats/
+          retention-days: 14
+          if-no-files-found: warn
