@@ -1,0 +1,26 @@
+name: Verification Zefame
+on:
+  schedule:
+    - cron: "17 7,19 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - run: python main.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultat-zefame
+          path: resultat.png
+          if-no-files-found: ignore
